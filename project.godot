@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Ashes of Asterion"
 config/description="Dark fantasy ARPG. Skills you use grow stronger. Cosmic invasion. Forbidden powers."
-run/main_scene="res://scenes/test/TestRoom.tscn"
+run/main_scene="res://scenes/test/MovementSandbox.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
