@@ -1,0 +1,28 @@
+# Godot 4+ specific ignores
+.godot/
+.import/
+/export/
+/builds/
+/exports/
+*.translation
+
+# Imported textures/audio
+*.import
+
+# Mono / .NET (in case of mixed-language down the line)
+.mono/
+*.csproj
+*.sln
+
+# IDE
+.vscode/
+.idea/
+*.tmp
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only configs
+override.cfg
