@@ -26,3 +26,11 @@ Thumbs.db
 
 # Local-only configs
 override.cfg
+
+# Local agent / Claude tooling
+.a5c/
+.claude/
+
+# Godot 4.4+ UID sidecars (regenerated on import; not needed for solo project)
+*.gd.uid
+*.tscn.uid
