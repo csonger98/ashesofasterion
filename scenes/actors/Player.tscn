@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/actor/PlayerActor.gd" id="1_player_script"]
+[ext_resource type="Script" path="res://scripts/camera/IsoCamera.gd" id="2_iso_camera"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
 
@@ -16,3 +17,7 @@ mesh = SubResource("CapsuleMesh_player")
 [node name="Collision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="IsoCamera" type="Camera3D" parent="."]
+script = ExtResource("2_iso_camera")
+target_path = NodePath("..")
