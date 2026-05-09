@@ -321,6 +321,20 @@ func test_godot_loaded():
 
 - [ ] **Step 5: Run GUT from the CLI.**
 
+> **Editor warmup required.** Godot 4 only registers `class_name` declarations
+> from third-party scripts (like GUT's `GutTest`) once the editor has performed
+> a full project parse. On first run after vendoring GUT — or any time
+> `class_name` declarations change in `addons/` — run an editor-quit warmup
+> first so the class_name cache is built. `--headless --import` is **not**
+> sufficient. From a clean clone you may need to run the warmup twice (the
+> first pass scans, the second pass indexes class_names):
+>
+> ```
+> godot --headless --editor --quit-after 1
+> ```
+>
+> Then run the GUT CLI:
+
 ```
 godot --headless -s addons/gut/gut_cmdln.gd -gconfig=res://.gutconfig.json -gexit
 ```

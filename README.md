@@ -19,6 +19,19 @@ Tests use [GUT](https://github.com/bitwes/Gut). Run from CLI:
 godot --headless -s addons/gut/gut_cmdln.gd -gconfig=res://.gutconfig.json -gexit
 ```
 
+> **First-run / CI note:** Godot 4 only registers `class_name` declarations from
+> third-party scripts (like GUT's `GutTest`) after a full editor project parse.
+> On a fresh clone — or whenever scripts under `addons/` add or change a
+> `class_name` — run an editor-quit warmup first (`--headless --import` alone
+> is not sufficient). You may need to run it twice on a cold project (the
+> first pass scans, the second pass indexes class_names):
+>
+> ```
+> godot --headless --editor --quit-after 1
+> ```
+>
+> Then run the GUT CLI command above.
+
 ## Project Structure
 
 ```
