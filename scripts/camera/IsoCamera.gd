@@ -8,6 +8,10 @@ extends Camera3D
 var _target: Node3D
 
 func _ready() -> void:
+    # top_level decouples this camera from the parent's transform; the parent's
+    # rotation (e.g. PlayerActor's look_at-based aim) would otherwise spin the
+    # iso view around. We position via global_position in _process anyway.
+    top_level = true
     projection = PROJECTION_ORTHOGONAL
     size = 12.0
     rotation_degrees = Vector3(-30.0, 45.0, 0.0)
