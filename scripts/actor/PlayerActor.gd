@@ -100,10 +100,13 @@ func _on_hit_landed(_target: Node, damage: int, archetype: String) -> void:
 func _read_movement_input() -> Vector3:
     var x := Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
     var z := Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-    var v := Vector3(x, 0.0, z)
-    if v.length_squared() > 1.0:
-        v = v.normalized()
-    return v
+    var local := Vector3(x, 0.0, z)
+    if local.length_squared() > 1.0:
+        local = local.normalized()
+    # Player-relative movement: W moves forward (the way the player faces),
+    # D strafes right, etc. transform.basis carries the player's current Y rotation
+    # (set by look_at in _update_aim each frame), so we rotate local input into world.
+    return transform.basis * local
 
 func _update_aim() -> void:
     var cam := get_viewport().get_camera_3d()
