@@ -5,8 +5,14 @@ extends CharacterBody3D
 @export var acceleration: float = 30.0
 @export var deceleration: float = 35.0
 
+@onready var _hitbox: Hitbox = $Hitbox
+
 var aim_direction: Vector3 = Vector3.FORWARD
 var aim_world_point: Vector3 = Vector3.ZERO
+
+func _ready() -> void:
+    if _hitbox != null:
+        _hitbox.hit_landed.connect(_on_hit_landed)
 
 func _physics_process(delta: float) -> void:
     var input_dir := _read_movement_input()
@@ -16,6 +22,18 @@ func _physics_process(delta: float) -> void:
     velocity.z = move_toward(velocity.z, target.z, rate * delta)
     move_and_slide()
     _update_aim()
+
+func _unhandled_input(event: InputEvent) -> void:
+    if event.is_action_pressed("attack_light"):
+        _swing_light()
+
+func _swing_light() -> void:
+    if _hitbox != null:
+        _hitbox.start_swing()
+
+func _on_hit_landed(_target: Node, damage: int, archetype: String) -> void:
+    # XP per hit = damage dealt (Plan 1: linear, tunable later).
+    SkillRegistry.award_xp(archetype, damage)
 
 func _read_movement_input() -> Vector3:
     var x := Input.get_action_strength("move_right") - Input.get_action_strength("move_left")

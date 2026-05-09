@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/actor/PlayerActor.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/camera/IsoCamera.gd" id="2_iso_camera"]
+[ext_resource type="Script" path="res://scripts/combat/Hitbox.gd" id="3_hitbox_script"]
+[ext_resource type="Resource" path="res://resources/weapons/sword_basic.tres" id="4_sword_basic"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
 
@@ -9,6 +11,9 @@
 
 [sub_resource type="BoxMesh" id="BoxMesh_aim_indicator"]
 size = Vector3(0.1, 0.1, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(1.4, 1.5, 1.4)
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_player_script")
@@ -28,3 +33,11 @@ shape = SubResource("CapsuleShape3D_player")
 [node name="IsoCamera" type="Camera3D" parent="."]
 script = ExtResource("2_iso_camera")
 target_path = NodePath("..")
+
+[node name="Hitbox" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -1)
+script = ExtResource("3_hitbox_script")
+weapon = ExtResource("4_sword_basic")
+
+[node name="Shape" type="CollisionShape3D" parent="Hitbox"]
+shape = SubResource("BoxShape3D_hitbox")
