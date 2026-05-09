@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/actor/PlayerActor.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/camera/IsoCamera.gd" id="2_iso_camera"]
@@ -9,8 +9,11 @@
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_aim_indicator"]
-size = Vector3(0.1, 0.1, 0.6)
+[sub_resource type="BoxMesh" id="BoxMesh_aim_shaft"]
+size = Vector3(0.04, 0.04, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_aim_head"]
+size = Vector3(0.16, 0.06, 0.15)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
 size = Vector3(1.4, 1.5, 1.4)
@@ -22,9 +25,15 @@ script = ExtResource("1_player_script")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_player")
 
-[node name="AimIndicator" type="MeshInstance3D" parent="Mesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.7)
-mesh = SubResource("BoxMesh_aim_indicator")
+[node name="AimIndicator" type="Node3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+
+[node name="Shaft" type="MeshInstance3D" parent="Mesh/AimIndicator"]
+mesh = SubResource("BoxMesh_aim_shaft")
+
+[node name="Arrowhead" type="MeshInstance3D" parent="Mesh/AimIndicator"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.35)
+mesh = SubResource("BoxMesh_aim_head")
 
 [node name="Collision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

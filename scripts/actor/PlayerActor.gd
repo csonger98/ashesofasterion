@@ -13,6 +13,7 @@ extends CharacterBody3D
 @export var dodge_xp_reward: int = 8
 
 @onready var _hitbox: Hitbox = $Hitbox
+@onready var _aim_indicator: Node3D = $Mesh/AimIndicator
 
 var aim_direction: Vector3 = Vector3.FORWARD
 var aim_world_point: Vector3 = Vector3.ZERO
@@ -20,6 +21,7 @@ var aim_world_point: Vector3 = Vector3.ZERO
 var _is_dodging: bool = false
 var _is_iframe: bool = false
 var _last_dodge_end_time: float = -999.0
+var _swing_tween: Tween = null
 
 func _ready() -> void:
     if _hitbox != null:
@@ -46,8 +48,23 @@ func _unhandled_input(event: InputEvent) -> void:
         _try_dodge()
 
 func _swing_light() -> void:
-    if _hitbox != null:
-        _hitbox.start_swing()
+    if _hitbox == null:
+        return
+    _hitbox.start_swing()
+    _animate_swing()
+
+func _animate_swing() -> void:
+    if _aim_indicator == null:
+        return
+    if _swing_tween != null and _swing_tween.is_valid():
+        _swing_tween.kill()
+    # Wind up: instant pose to -60deg. Swing through to +60deg over 0.25s
+    # with quadratic ease-out (whip feel). Settle back to forward over 0.10s.
+    _aim_indicator.rotation.y = deg_to_rad(-60.0)
+    _swing_tween = create_tween()
+    _swing_tween.tween_property(_aim_indicator, "rotation:y", deg_to_rad(60.0), 0.25) \
+        .set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+    _swing_tween.tween_property(_aim_indicator, "rotation:y", 0.0, 0.10)
 
 func _try_dodge() -> void:
     var now := Time.get_ticks_msec() / 1000.0
