@@ -35,6 +35,10 @@ func _on_hit_landed(_target: Node, damage: int, archetype: String) -> void:
     # XP per hit = damage dealt (Plan 1: linear, tunable later).
     SkillRegistry.award_xp(archetype, damage)
 
+func receive_attack(damage: int) -> void:
+    # Plan 1 placeholder: just log. HP system + i-frames arrive in later plans.
+    print("Player took %d damage" % damage)
+
 func _read_movement_input() -> Vector3:
     var x := Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
     var z := Input.get_action_strength("move_down") - Input.get_action_strength("move_up")

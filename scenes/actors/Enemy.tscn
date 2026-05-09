@@ -1,0 +1,35 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/actor/EnemyActor.gd" id="1_enemy_script"]
+[ext_resource type="Script" path="res://scripts/combat/Hurtbox.gd" id="2_hurtbox_script"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy"]
+albedo_color = Color(0.667, 0.2, 0.2, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurtbox"]
+height = 2.0
+radius = 0.55
+
+[node name="Enemy" type="CharacterBody3D" groups=["enemy"]]
+script = ExtResource("1_enemy_script")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CapsuleMesh_enemy")
+material_override = SubResource("StandardMaterial3D_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="Hurtbox" type="Area3D" parent="."]
+script = ExtResource("2_hurtbox_script")
+owner_actor_path = NodePath("..")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_hurtbox")
