@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Weapon" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/Weapon.gd" id="1_weapon_script"]
+
+[resource]
+script = ExtResource("1_weapon_script")
+weapon_name = "Iron Sword"
+archetype = "Sword"
+base_damage = 10
+attack_duration_sec = 0.35
