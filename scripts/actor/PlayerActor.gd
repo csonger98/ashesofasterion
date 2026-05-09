@@ -103,10 +103,19 @@ func _read_movement_input() -> Vector3:
     var local := Vector3(x, 0.0, z)
     if local.length_squared() > 1.0:
         local = local.normalized()
-    # Player-relative movement: W moves forward (the way the player faces),
-    # D strafes right, etc. transform.basis carries the player's current Y rotation
-    # (set by look_at in _update_aim each frame), so we rotate local input into world.
-    return transform.basis * local
+    # Camera-relative movement: WASD aligns to the screen, regardless of where
+    # the player is aiming. W = up-on-screen, D = right-on-screen, etc. The
+    # player's body still rotates independently via look_at to face the cursor.
+    var cam := get_viewport().get_camera_3d()
+    if cam == null:
+        return local
+    var cam_right := cam.global_transform.basis.x
+    cam_right.y = 0.0
+    cam_right = cam_right.normalized()
+    var cam_back := cam.global_transform.basis.z
+    cam_back.y = 0.0
+    cam_back = cam_back.normalized()
+    return cam_right * local.x + cam_back * local.z
 
 func _update_aim() -> void:
     var cam := get_viewport().get_camera_3d()
