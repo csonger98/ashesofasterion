@@ -42,6 +42,8 @@ func _update_aim() -> void:
     to_aim.y = 0.0
     if to_aim.length_squared() > 0.001:
         aim_direction = to_aim.normalized()
-        # Rotate the player to face aim. Y-axis rotation only.
-        var angle := atan2(aim_direction.x, aim_direction.z)
-        rotation.y = angle
+        # Rotate the player so its forward (-Z) points at the cursor.
+        # look_at handles the sign convention; we zero pitch/roll to keep iso flat.
+        look_at(aim_world_point, Vector3.UP)
+        rotation.x = 0.0
+        rotation.z = 0.0
