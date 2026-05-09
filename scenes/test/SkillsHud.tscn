@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/test/SkillsHud.gd" id="1_hud_script"]
+
+[node name="SkillsHud" type="CanvasLayer"]
+script = ExtResource("1_hud_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 280.0
+offset_bottom = 80.0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Label" type="Label" parent="Margin"]
+theme_override_font_sizes/font_size = 18
+text = ""
