@@ -14,6 +14,11 @@ func _ready() -> void:
     area_entered.connect(_on_area_entered)
 
 func start_swing() -> void:
+    if _active:
+        # Already swinging; ignore re-entrant calls. Prevents the second
+        # call from clearing _already_hit_this_swing mid-swing and the
+        # first coroutine's end_swing() from killing the second hitbox window.
+        return
     if weapon == null:
         push_warning("Hitbox.start_swing called with no weapon assigned")
         return
