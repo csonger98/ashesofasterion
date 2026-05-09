@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="1_player_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/Enemy.tscn" id="2_enemy_scene"]
 [ext_resource type="PackedScene" path="res://scenes/test/SkillsHud.tscn" id="3_hud_scene"]
+[ext_resource type="Script" path="res://scripts/test/EnemySpawner.gd" id="4_enemy_spawner"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(20, 20)
@@ -61,7 +62,10 @@ shape = SubResource("BoxShape3D_wall_ew")
 [node name="Player" parent="." instance=ExtResource("1_player_scene")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 
-[node name="Enemy" parent="." instance=ExtResource("2_enemy_scene")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+[node name="EnemySpawner" type="Node3D" parent="."]
+script = ExtResource("4_enemy_spawner")
+enemy_scene = ExtResource("2_enemy_scene")
+max_concurrent = 2
+respawn_delay_sec = 1.5
 
 [node name="SkillsHud" parent="." instance=ExtResource("3_hud_scene")]

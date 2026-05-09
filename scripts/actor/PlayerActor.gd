@@ -58,13 +58,14 @@ func _animate_swing() -> void:
         return
     if _swing_tween != null and _swing_tween.is_valid():
         _swing_tween.kill()
-    # Wind up: instant pose to -60deg. Swing through to +60deg over 0.25s
-    # with quadratic ease-out (whip feel). Settle back to forward over 0.10s.
-    _aim_indicator.rotation.y = deg_to_rad(-60.0)
+    # Three phases over 0.35s (matches weapon.attack_duration_sec):
+    # windup (0.10s, ease-in to -60deg), swing-through (0.20s, ease-out to +60deg), settle (0.05s back to 0).
     _swing_tween = create_tween()
-    _swing_tween.tween_property(_aim_indicator, "rotation:y", deg_to_rad(60.0), 0.25) \
+    _swing_tween.tween_property(_aim_indicator, "rotation:y", deg_to_rad(-60.0), 0.10) \
+        .set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+    _swing_tween.tween_property(_aim_indicator, "rotation:y", deg_to_rad(60.0), 0.20) \
         .set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-    _swing_tween.tween_property(_aim_indicator, "rotation:y", 0.0, 0.10)
+    _swing_tween.tween_property(_aim_indicator, "rotation:y", 0.0, 0.05)
 
 func _try_dodge() -> void:
     var now := Time.get_ticks_msec() / 1000.0

@@ -7,6 +7,7 @@ extends CharacterBody3D
 @export var attack_cooldown_sec: float = 1.2
 
 @onready var _hurtbox: Hurtbox = $Hurtbox
+@onready var _hp_pivot: Node3D = $HpBar/FgPivot
 
 var hp: int
 var _player: Node3D
@@ -19,6 +20,7 @@ func _ready() -> void:
     if _hurtbox != null:
         _hurtbox.damaged.connect(_on_damaged)
     _player = get_tree().get_first_node_in_group("player")
+    _refresh_hp_bar()
 
 func _physics_process(_delta: float) -> void:
     if _player == null:
@@ -47,6 +49,13 @@ func _maybe_attack_player() -> void:
 
 func _on_damaged(amount: int) -> void:
     hp -= amount
+    _refresh_hp_bar()
     if hp <= 0:
         died.emit()
         queue_free()
+
+func _refresh_hp_bar() -> void:
+    if _hp_pivot == null:
+        return
+    var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
+    _hp_pivot.scale.x = ratio
