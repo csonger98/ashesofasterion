@@ -40,5 +40,29 @@ scenes/       Godot scenes (.tscn)
 resources/    Data resources (.tres)
 addons/       Third-party plugins (e.g. gut)
 test/         Unit tests
+docs/         Design and implementation plans
 art/ audio/ shaders/   Asset directories
 ```
+
+## Status
+
+- **2026-05-09:** Plan 1 (Foundation / Combat Prototype) complete. Tag: `v0.1.0-foundation`.
+- Player can move (WASD), aim (mouse), attack (LMB), and dodge (Space). Sword and Dodge XP tracks active. One test enemy walks toward player and dies after 3 hits.
+- 20 GUT tests passing across SkillTrack, SkillRegistry, hit→XP routing, and smoke.
+- See [docs/plans/2026-05-09-foundation-combat-prototype.md](docs/plans/2026-05-09-foundation-combat-prototype.md) for the implementation details.
+- Next: **Plan 2 — Crafting & Inventory MVP**.
+
+## Manual playtest checklist (Plan 1 acceptance)
+
+Run the project (F5 in editor or `godot` from CLI). Verify:
+
+- [ ] WASD moves the player capsule.
+- [ ] Iso camera follows smoothly without rotating.
+- [ ] Player rotates to face the mouse cursor; aim indicator points at cursor.
+- [ ] LMB swings the sword. Each landed hit on the red enemy increments **Sword** XP by 10 in the HUD.
+- [ ] After 5 landed hits, Sword reaches L1 (50 XP threshold).
+- [ ] Space dodges with brief i-frames and a velocity burst.
+- [ ] Dodging within ~2.5m of the enemy increments **Dodge** XP by 8.
+- [ ] Enemy walks toward player and prints "Player took 5 damage" to the Output panel on contact (unless dodging through i-frames).
+- [ ] Enemy dies after 3 sword hits and is freed.
+- [ ] No script errors in the Output panel.
