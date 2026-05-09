@@ -20,6 +20,10 @@ config/icon="res://icon.svg"
 
 SkillRegistry="*res://scripts/skills/SkillRegistry.gd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
 [input]
 
 move_up={
