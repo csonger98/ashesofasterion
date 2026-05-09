@@ -11,7 +11,7 @@
 - Signal-driven combat: weapons emit a `hit_landed(target, damage_dealt, weapon_archetype)` signal; the player consumes it and routes `+XP` to the matching SkillTrack.
 - CharacterBody3D for player and enemy. Orthographic Camera3D for the iso view, fixed angle, lerp-follow.
 
-**Tech stack:** Godot 4.3 stable (matches the user's installed version at `C:\Users\songe\Godot\godot.cmd`), GDScript, GUT (Godot Unit Test) plugin pinned to a tagged release, git.
+**Tech stack:** Godot 4.6 (user's target version), GDScript, GUT (Godot Unit Test) plugin pinned to a tagged release, git.
 
 **Out of scope (defer to later plans):** crafting, save/load, corruption mechanic, faction system, bosses, hub scene, multiple zones, audio, art polish, perks beyond a placeholder, all skill tracks beyond Sword + Dodge.
 
@@ -116,7 +116,7 @@ config_version=5
 config/name="Ashes of Asterion"
 config/description="Dark fantasy ARPG. Skills you use grow stronger. Cosmic invasion. Forbidden powers."
 run/main_scene="res://scenes/test/TestRoom.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]

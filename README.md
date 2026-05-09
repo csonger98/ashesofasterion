@@ -7,7 +7,7 @@ Dark fantasy ARPG. Solo-dev project in Godot 4.
 
 ## Setup
 
-1. Install [Godot 4.3 or later](https://godotengine.org/download).
+1. Install [Godot 4.6 or later](https://godotengine.org/download).
 2. Open this project in Godot (`File > Open Project`, select `project.godot`).
 3. Run the project: F5 or `godot` from the command line.
 
