@@ -1,59 +1,88 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/actor/PlayerActor.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/camera/IsoCamera.gd" id="2_iso_camera"]
 [ext_resource type="Script" path="res://scripts/combat/Hitbox.gd" id="3_hitbox_script"]
 [ext_resource type="Resource" path="res://resources/weapons/sword_basic.tres" id="4_sword_basic"]
+[ext_resource type="Resource" path="res://resources/items/health_potion.tres" id="5_health_potion"]
+[ext_resource type="Script" path="res://scripts/combat/SwingTrail.gd" id="6_swing_trail"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_blade"]
-size = Vector3(0.05, 0.05, 0.55)
+size = Vector3(0.11, 0.028, 1.0)
 
 [sub_resource type="BoxMesh" id="BoxMesh_crossguard"]
-size = Vector3(0.22, 0.04, 0.05)
+size = Vector3(0.42, 0.07, 0.12)
 
-[sub_resource type="BoxMesh" id="BoxMesh_hilt"]
-size = Vector3(0.045, 0.045, 0.1)
+[sub_resource type="CylinderMesh" id="CylinderMesh_grip"]
+top_radius = 0.034
+bottom_radius = 0.038
+height = 0.16
+
+[sub_resource type="SphereMesh" id="SphereMesh_pommel"]
+radius = 0.055
+height = 0.11
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_blade"]
-albedo_color = Color(0.82, 0.86, 0.92, 1)
-metallic = 0.75
-roughness = 0.22
+albedo_color = Color(0.86, 0.9, 0.96, 1)
+metallic = 0.92
+roughness = 0.12
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grip"]
-albedo_color = Color(0.35, 0.22, 0.13, 1)
-roughness = 0.85
+albedo_color = Color(0.22, 0.13, 0.07, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_guard"]
+albedo_color = Color(0.34, 0.28, 0.18, 1)
+metallic = 0.75
+roughness = 0.35
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
 size = Vector3(1.4, 1.5, 1.4)
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 script = ExtResource("1_player_script")
+default_potion = ExtResource("5_health_potion")
+character_glb_path = "res://art/characters/UAL1_Standard.glb"
+character_scale = 1.0
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_player")
 
+[node name="Character" type="Node3D" parent="."]
+
 [node name="AimIndicator" type="Node3D" parent="Mesh"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
 
 [node name="Blade" type="MeshInstance3D" parent="Mesh/AimIndicator"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.325)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.6)
 mesh = SubResource("BoxMesh_blade")
 material_override = SubResource("StandardMaterial3D_blade")
 
+[node name="BladeTip" type="Node3D" parent="Mesh/AimIndicator"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.1)
+
+[node name="BladeBase" type="Node3D" parent="Mesh/AimIndicator"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.1)
+
 [node name="Crossguard" type="MeshInstance3D" parent="Mesh/AimIndicator"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.025)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.075)
 mesh = SubResource("BoxMesh_crossguard")
+material_override = SubResource("StandardMaterial3D_guard")
+
+[node name="Grip" type="MeshInstance3D" parent="Mesh/AimIndicator"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0.08)
+mesh = SubResource("CylinderMesh_grip")
 material_override = SubResource("StandardMaterial3D_grip")
 
-[node name="Hilt" type="MeshInstance3D" parent="Mesh/AimIndicator"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05)
-mesh = SubResource("BoxMesh_hilt")
-material_override = SubResource("StandardMaterial3D_grip")
+[node name="Pommel" type="MeshInstance3D" parent="Mesh/AimIndicator"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.21)
+mesh = SubResource("SphereMesh_pommel")
+material_override = SubResource("StandardMaterial3D_guard")
 
 [node name="Collision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -70,3 +99,9 @@ weapon = ExtResource("4_sword_basic")
 
 [node name="Shape" type="CollisionShape3D" parent="Hitbox"]
 shape = SubResource("BoxShape3D_hitbox")
+
+[node name="SwingTrail" type="MeshInstance3D" parent="."]
+script = ExtResource("6_swing_trail")
+tip_path = NodePath("../Mesh/AimIndicator/BladeTip")
+base_path = NodePath("../Mesh/AimIndicator/BladeBase")
+sample_lifetime_sec = 0.22

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyKind" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/EnemyKind.gd" id="1_enemy_kind"]
+
+[resource]
+script = ExtResource("1_enemy_kind")
+display_name = "Grunt"
+max_hp = 30
+move_speed = 4.0
+contact_damage = 5
+attack_cooldown_sec = 1.0
+mesh_color = Color(0.667, 0.2, 0.2, 1)
+health_orb_fill_amount = 0.33
+health_orb_drop_chance = 0.35

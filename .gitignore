@@ -31,6 +31,9 @@ override.cfg
 .a5c/
 .claude/
 
+# Asset source packs (unpacked Quaternius UAL etc.) — only the .glb in art/ ships
+3dstuff/
+
 # Godot 4.4+ UID sidecars (regenerated on import; not needed for solo project)
 *.gd.uid
 *.tscn.uid

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ashes of Asterion — Map Editor</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #15151a; color: #ddd; margin: 0; }
+  #topbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #20202a; border-bottom: 1px solid #333; flex-wrap: wrap; }
+  .group { display: flex; gap: 4px; align-items: center; padding: 0 8px; border-right: 1px solid #333; }
+  .group:last-child { border-right: none; }
+  .group-label { font-size: 11px; color: #888; text-transform: uppercase; margin-right: 4px; }
+  button { background: #383844; color: #ddd; border: 1px solid #4a4a55; padding: 5px 10px; margin: 0; cursor: pointer; border-radius: 3px; font-size: 13px; }
+  button:hover { background: #45455a; }
+  button.active { background: #c4422a; border-color: #d05a3a; color: white; }
+  #stage { display: flex; }
+  #canvas-wrap { padding: 16px; }
+  canvas { display: block; background: #2a2a32; border: 1px solid #444; cursor: crosshair; }
+  #side { padding: 16px; min-width: 220px; }
+  #side h3 { font-size: 12px; text-transform: uppercase; color: #888; margin: 18px 0 6px; letter-spacing: 0.05em; }
+  #side .stat { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #aaa; }
+  #side .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 3px 0; }
+  .swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #555; }
+  #file-input { display: none; }
+  #coords { padding: 4px 12px; background: #20202a; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #bbb; border-top: 1px solid #333; }
+  .hint { font-size: 11px; color: #888; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="group">
+    <span class="group-label">Rock</span>
+    <button data-tool="rock-s">Small</button>
+    <button data-tool="rock-m" class="active">Med</button>
+    <button data-tool="rock-l">Big</button>
+  </div>
+  <div class="group">
+    <span class="group-label">Entity</span>
+    <button data-tool="enemy">Enemy Spawn</button>
+    <button data-tool="player">Player Spawn</button>
+    <button data-tool="orb">Health Orb</button>
+  </div>
+  <div class="group">
+    <span class="group-label">Zone</span>
+    <button data-tool="zone">Draw Zone</button>
+  </div>
+  <div class="group">
+    <button data-tool="erase">Erase</button>
+  </div>
+  <div class="group">
+    <button id="btn-save">Save .json</button>
+    <button id="btn-load">Load .json</button>
+    <button id="btn-clear">Clear All</button>
+    <input id="file-input" type="file" accept=".json">
+  </div>
+</div>
+
+<div id="stage">
+  <div id="canvas-wrap">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
+  <div id="side">
+    <h3>Legend</h3>
+    <div class="legend"><span class="swatch" style="background:#6a6055;"></span> Rock</div>
+    <div class="legend"><span class="swatch" style="background:#cf3530;"></span> Enemy spawn</div>
+    <div class="legend"><span class="swatch" style="background:#3bb2e8;"></span> Player spawn</div>
+    <div class="legend"><span class="swatch" style="background:#e6a23a;"></span> Health orb</div>
+    <div class="legend"><span class="swatch" style="background:rgba(100,200,120,0.5);border-style:dashed;"></span> Safe zone</div>
+    <div class="legend"><span class="swatch" style="background:rgba(220,80,60,0.45);border-style:dashed;"></span> Hostile zone</div>
+
+    <h3>Controls</h3>
+    <div class="hint">Left-click: place / drag for zone</div>
+    <div class="hint">Right-click: erase nearest</div>
+    <div class="hint">Zone tool: drag a rectangle, then enter name + monster type</div>
+    <div class="hint">World: 200×200, centered at (0,0)</div>
+    <div class="hint">Major grid: 10m. Minor grid: 2m.</div>
+
+    <h3>Stats</h3>
+    <div class="stat" id="stat-count">0 entities</div>
+    <div class="stat" id="stat-rocks">0 rocks</div>
+    <div class="stat" id="stat-enemies">0 enemies</div>
+  </div>
+</div>
+
+<div id="coords">x: 0.00, z: 0.00 — tool: <span id="cur-tool">rock-m</span></div>
+
+<script>
+const WORLD_SIZE = 200;
+const CANVAS_PX = 800;
+const PX_PER_UNIT = CANVAS_PX / WORLD_SIZE;  // 4 px = 1 world unit
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const coordsEl = document.getElementById('coords');
+const curToolEl = document.getElementById('cur-tool');
+
+let entities = [];
+let currentTool = 'rock-m';
+let playerSpawn = null;  // single value, not in entities array
+let zoneDrag = null;  // {x1, z1} world coords while dragging a zone
+
+const ROCK_PROFILES = {
+  's': { sizeMin: 0.5, sizeMax: 0.9 },
+  'm': { sizeMin: 1.0, sizeMax: 1.7 },
+  'l': { sizeMin: 1.8, sizeMax: 2.6 },
+};
+
+function worldToCanvas(wx, wz) {
+  return [
+    (wx + WORLD_SIZE / 2) * PX_PER_UNIT,
+    (wz + WORLD_SIZE / 2) * PX_PER_UNIT,
+  ];
+}
+function canvasToWorld(cx, cz) {
+  return [
+    cx / PX_PER_UNIT - WORLD_SIZE / 2,
+    cz / PX_PER_UNIT - WORLD_SIZE / 2,
+  ];
+}
+
+function render() {
+  ctx.clearRect(0, 0, CANVAS_PX, CANVAS_PX);
+
+  // Background world rect
+  ctx.fillStyle = '#33333d';
+  ctx.fillRect(0, 0, CANVAS_PX, CANVAS_PX);
+
+  // Minor grid (every 2m)
+  ctx.strokeStyle = '#3c3c46';
+  ctx.lineWidth = 1;
+  for (let m = -WORLD_SIZE / 2; m <= WORLD_SIZE / 2; m += 2) {
+    const [px] = worldToCanvas(m, 0);
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, CANVAS_PX); ctx.stroke();
+    const [, py] = worldToCanvas(0, m);
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(CANVAS_PX, py); ctx.stroke();
+  }
+  // Major grid (every 10m)
+  ctx.strokeStyle = '#4d4d5a';
+  for (let m = -WORLD_SIZE / 2; m <= WORLD_SIZE / 2; m += 10) {
+    const [px] = worldToCanvas(m, 0);
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, CANVAS_PX); ctx.stroke();
+    const [, py] = worldToCanvas(0, m);
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(CANVAS_PX, py); ctx.stroke();
+  }
+  // Center axes
+  ctx.strokeStyle = '#666680';
+  ctx.lineWidth = 1.5;
+  const [cx0] = worldToCanvas(0, 0);
+  const [, cy0] = worldToCanvas(0, 0);
+  ctx.beginPath(); ctx.moveTo(cx0, 0); ctx.lineTo(cx0, CANVAS_PX); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, cy0); ctx.lineTo(CANVAS_PX, cy0); ctx.stroke();
+
+  // Zones first (drawn under other entities)
+  for (const e of entities) {
+    if (e.type === 'zone') drawEntity(e);
+  }
+  // Then non-zone entities
+  for (const e of entities) {
+    if (e.type !== 'zone') drawEntity(e);
+  }
+  if (playerSpawn) {
+    drawEntity({ type: 'player', x: playerSpawn.x, z: playerSpawn.z });
+  }
+  // Live preview of zone-in-progress
+  if (zoneDrag && zoneDrag.x2 !== undefined) {
+    drawZonePreview(zoneDrag);
+  }
+
+  // Update stats
+  document.getElementById('stat-count').textContent =
+    `${entities.length + (playerSpawn ? 1 : 0)} entities`;
+  document.getElementById('stat-rocks').textContent =
+    `${entities.filter(e => e.type === 'rock').length} rocks`;
+  document.getElementById('stat-enemies').textContent =
+    `${entities.filter(e => e.type === 'enemy').length} enemies`;
+}
+
+function drawEntity(e) {
+  const [cx, cy] = worldToCanvas(e.x, e.z);
+  if (e.type === 'rock') {
+    const px = Math.max(2, e.size_xz * PX_PER_UNIT * 0.55);
+    ctx.fillStyle = '#6a6055';
+    ctx.strokeStyle = '#9a8a78';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.rect(cx - px, cy - px, px * 2, px * 2);
+    ctx.fill(); ctx.stroke();
+  } else if (e.type === 'enemy') {
+    ctx.fillStyle = '#cf3530';
+    ctx.strokeStyle = '#ffa090';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+  } else if (e.type === 'player') {
+    ctx.fillStyle = '#3bb2e8';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Plus sign for unique marker
+    ctx.strokeStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, cy); ctx.lineTo(cx + 3, cy);
+    ctx.moveTo(cx, cy - 3); ctx.lineTo(cx, cy + 3);
+    ctx.stroke();
+  } else if (e.type === 'orb') {
+    ctx.fillStyle = '#e6a23a';
+    ctx.strokeStyle = '#ffe0a0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+  } else if (e.type === 'zone') {
+    const [x1, y1] = worldToCanvas(Math.min(e.x1, e.x2), Math.min(e.z1, e.z2));
+    const [x2, y2] = worldToCanvas(Math.max(e.x1, e.x2), Math.max(e.z1, e.z2));
+    const safe = (e.monster_type === 'none' || e.monster_type === 'safe' || !e.monster_type);
+    ctx.fillStyle = safe ? 'rgba(80,200,120,0.18)' : 'rgba(220,80,60,0.18)';
+    ctx.strokeStyle = safe ? 'rgba(100,220,140,0.85)' : 'rgba(240,110,90,0.85)';
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.setLineDash([]);
+    // Label
+    ctx.fillStyle = safe ? '#a0e8b0' : '#ffb090';
+    ctx.font = 'bold 12px ui-monospace, Consolas, monospace';
+    ctx.textBaseline = 'top';
+    ctx.fillText(e.name || '(unnamed)', x1 + 4, y1 + 4);
+    if (!safe && e.monster_type) {
+      ctx.fillStyle = '#ffd0c0';
+      ctx.font = '11px ui-monospace, Consolas, monospace';
+      ctx.fillText(`▸ ${e.monster_type}`, x1 + 4, y1 + 19);
+    }
+  }
+}
+
+function drawZonePreview(z) {
+  const [x1, y1] = worldToCanvas(Math.min(z.x1, z.x2), Math.min(z.z1, z.z2));
+  const [x2, y2] = worldToCanvas(Math.max(z.x1, z.x2), Math.max(z.z1, z.z2));
+  ctx.fillStyle = 'rgba(255,200,80,0.15)';
+  ctx.strokeStyle = 'rgba(255,220,100,0.9)';
+  ctx.setLineDash([4, 3]);
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+  ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+  ctx.setLineDash([]);
+}
+
+function findNearestEntity(wx, wz, radius = 2.5) {
+  let nearest = null;
+  let nearestIdx = -1;
+  let nearestDist = radius;
+  for (let i = 0; i < entities.length; i++) {
+    const e = entities[i];
+    if (e.type === 'zone') {
+      // Hit if point is inside the rectangle.
+      const minX = Math.min(e.x1, e.x2), maxX = Math.max(e.x1, e.x2);
+      const minZ = Math.min(e.z1, e.z2), maxZ = Math.max(e.z1, e.z2);
+      if (wx >= minX && wx <= maxX && wz >= minZ && wz <= maxZ) {
+        return { idx: i, ent: e, dist: 0 };
+      }
+      continue;
+    }
+    const d = Math.hypot(e.x - wx, e.z - wz);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearest = e;
+      nearestIdx = i;
+    }
+  }
+  if (playerSpawn) {
+    const d = Math.hypot(playerSpawn.x - wx, playerSpawn.z - wz);
+    if (d < nearestDist) {
+      return { player: true, dist: d };
+    }
+  }
+  return nearest ? { idx: nearestIdx, ent: nearest, dist: nearestDist } : null;
+}
+
+function placeAt(wx, wz) {
+  if (currentTool.startsWith('rock-')) {
+    const profile = ROCK_PROFILES[currentTool.slice(5)];
+    const size_xz = profile.sizeMin + Math.random() * (profile.sizeMax - profile.sizeMin);
+    const size_y = size_xz * (0.5 + Math.random() * 0.6);
+    entities.push({
+      type: 'rock',
+      x: wx, z: wz,
+      size_xz: size_xz,
+      size_y: size_y,
+      rot_y: Math.random() * Math.PI * 2,
+      // jitter in non-y axes for visual variety
+      tilt_x: (Math.random() - 0.5) * 0.5,
+      tilt_z: (Math.random() - 0.5) * 0.5,
+    });
+  } else if (currentTool === 'enemy') {
+    entities.push({ type: 'enemy', x: wx, z: wz });
+  } else if (currentTool === 'orb') {
+    entities.push({ type: 'orb', x: wx, z: wz, fill_amount: 0.33 });
+  } else if (currentTool === 'player') {
+    playerSpawn = { x: wx, z: wz };
+  }
+}
+
+function eraseAt(wx, wz) {
+  const hit = findNearestEntity(wx, wz, 2.5);
+  if (!hit) return;
+  if (hit.player) {
+    playerSpawn = null;
+  } else {
+    entities.splice(hit.idx, 1);
+  }
+}
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const [wx, wz] = canvasToWorld(cx, cy);
+  if (e.button === 2 || currentTool === 'erase') {
+    eraseAt(wx, wz);
+    render();
+    return;
+  }
+  if (currentTool === 'zone') {
+    zoneDrag = { x1: wx, z1: wz, x2: wx, z2: wz };
+    render();
+    return;
+  }
+  placeAt(wx, wz);
+  render();
+});
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const [wx, wz] = canvasToWorld(cx, cy);
+  coordsEl.firstChild.textContent = `x: ${wx.toFixed(2)}, z: ${wz.toFixed(2)} — tool: `;
+  if (zoneDrag) {
+    zoneDrag.x2 = wx;
+    zoneDrag.z2 = wz;
+    render();
+  }
+});
+canvas.addEventListener('mouseup', (e) => {
+  if (!zoneDrag) return;
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const [wx, wz] = canvasToWorld(cx, cy);
+  zoneDrag.x2 = wx;
+  zoneDrag.z2 = wz;
+  // Reject zero-area zones.
+  if (Math.abs(zoneDrag.x2 - zoneDrag.x1) < 0.5 || Math.abs(zoneDrag.z2 - zoneDrag.z1) < 0.5) {
+    zoneDrag = null;
+    render();
+    return;
+  }
+  const name = prompt('Zone name (e.g. "Crystal Cavern Mouth"):', 'Unnamed Zone');
+  if (name === null) { zoneDrag = null; render(); return; }
+  const monsterType = prompt(
+    'Monster type for this zone (e.g. "grunt", "elite_grunt", "boss", or "none" for safe zone):',
+    'grunt'
+  );
+  if (monsterType === null) { zoneDrag = null; render(); return; }
+  entities.push({
+    type: 'zone',
+    x1: zoneDrag.x1, z1: zoneDrag.z1,
+    x2: zoneDrag.x2, z2: zoneDrag.z2,
+    name: name.trim() || 'Unnamed Zone',
+    monster_type: monsterType.trim() || 'none',
+  });
+  zoneDrag = null;
+  render();
+});
+
+document.querySelectorAll('button[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('button[data-tool]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTool = btn.dataset.tool;
+    curToolEl.textContent = currentTool;
+  });
+});
+
+document.getElementById('btn-save').addEventListener('click', () => {
+  const payload = {
+    format_version: 1,
+    world_size: WORLD_SIZE,
+    player_spawn: playerSpawn,
+    entities: entities,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'starting_zone.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-load').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      entities = data.entities || [];
+      playerSpawn = data.player_spawn || null;
+      render();
+    } catch (err) {
+      alert('Invalid JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Clear all entities?')) return;
+  entities = [];
+  playerSpawn = null;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

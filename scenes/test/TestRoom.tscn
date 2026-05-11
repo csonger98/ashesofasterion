@@ -1,29 +1,74 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="1_player_scene"]
 [ext_resource type="PackedScene" path="res://scenes/actors/Enemy.tscn" id="2_enemy_scene"]
 [ext_resource type="PackedScene" path="res://scenes/test/SkillsHud.tscn" id="3_hud_scene"]
 [ext_resource type="Script" path="res://scripts/test/EnemySpawner.gd" id="4_enemy_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PlayerStatsHud.tscn" id="5_stats_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/DeathScreen.tscn" id="6_death_screen"]
+[ext_resource type="Script" path="res://scripts/test/RockScatter.gd" id="7_rock_scatter"]
+[ext_resource type="PackedScene" path="res://scenes/ui/Minimap.tscn" id="8_minimap"]
+[ext_resource type="Script" path="res://scripts/test/NavBaker.gd" id="9_nav_baker"]
+[ext_resource type="Script" path="res://scripts/test/TreeScatter.gd" id="10_tree_scatter"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_main"]
+geometry_parsed_geometry_type = 1
+agent_radius = 0.6
+agent_height = 2.0
+cell_size = 0.25
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_forest"]
+sky_top_color = Color(0.32, 0.42, 0.5, 1)
+sky_horizon_color = Color(0.48, 0.5, 0.46, 1)
+ground_bottom_color = Color(0.08, 0.1, 0.07, 1)
+ground_horizon_color = Color(0.3, 0.32, 0.26, 1)
+
+[sub_resource type="Sky" id="Sky_forest"]
+sky_material = SubResource("ProceduralSkyMaterial_forest")
+
+[sub_resource type="Environment" id="Environment_forest"]
+background_mode = 2
+sky = SubResource("Sky_forest")
+ambient_light_source = 3
+ambient_light_color = Color(0.55, 0.62, 0.55, 1)
+ambient_light_sky_contribution = 0.7
+ambient_light_energy = 0.4
+fog_enabled = true
+fog_light_color = Color(0.45, 0.5, 0.42, 1)
+fog_light_energy = 0.9
+fog_density = 0.012
+fog_aerial_perspective = 0.3
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
-size = Vector2(20, 20)
+size = Vector2(200, 200)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.4, 0.4, 0.4, 1)
+albedo_color = Color(0.18, 0.14, 0.09, 1)
+roughness = 0.95
+uv1_scale = Vector3(40, 40, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(20, 0.1, 20)
+size = Vector3(200, 0.1, 200)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
-size = Vector3(20, 2, 0.4)
+size = Vector3(200, 2, 0.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
-size = Vector3(0.4, 2, 20)
+size = Vector3(0.4, 2, 200)
 
 [node name="TestRoom" type="Node3D"]
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_forest")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_main")
+script = ExtResource("9_nav_baker")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 4, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 1.1
 
 [node name="Floor" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_floor")
@@ -36,25 +81,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 shape = SubResource("BoxShape3D_floor")
 
 [node name="WallNorth" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -100)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WallNorth"]
 shape = SubResource("BoxShape3D_wall_ns")
 
 [node name="WallSouth" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 100)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WallSouth"]
 shape = SubResource("BoxShape3D_wall_ns")
 
 [node name="WallEast" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 1, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WallEast"]
 shape = SubResource("BoxShape3D_wall_ew")
 
 [node name="WallWest" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -100, 1, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WallWest"]
 shape = SubResource("BoxShape3D_wall_ew")
@@ -65,7 +110,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 [node name="EnemySpawner" type="Node3D" parent="."]
 script = ExtResource("4_enemy_spawner")
 enemy_scene = ExtResource("2_enemy_scene")
-max_concurrent = 2
+max_concurrent = 0
 respawn_delay_sec = 1.5
 
 [node name="SkillsHud" parent="." instance=ExtResource("3_hud_scene")]
+
+[node name="PlayerStatsHud" parent="." instance=ExtResource("5_stats_hud")]
+
+[node name="DeathScreen" parent="." instance=ExtResource("6_death_screen")]
+
+[node name="RockScatter" type="Node3D" parent="."]
+script = ExtResource("7_rock_scatter")
+
+[node name="TreeScatter" type="Node3D" parent="."]
+script = ExtResource("10_tree_scatter")
+
+[node name="Minimap" parent="." instance=ExtResource("8_minimap")]

@@ -1,7 +1,9 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/actor/EnemyActor.gd" id="1_enemy_script"]
 [ext_resource type="Script" path="res://scripts/combat/Hurtbox.gd" id="2_hurtbox_script"]
+[ext_resource type="Resource" path="res://resources/enemies/grunt.tres" id="3_grunt_kind"]
+[ext_resource type="PackedScene" path="res://scenes/items/HealthOrb.tscn" id="4_health_orb"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
 
@@ -14,28 +16,68 @@ albedo_color = Color(0.667, 0.2, 0.2, 1)
 height = 2.0
 radius = 0.55
 
-[sub_resource type="BoxMesh" id="BoxMesh_hpbar"]
-size = Vector3(0.8, 0.08, 0.05)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hpbg"]
-albedo_color = Color(0.1, 0.1, 0.12, 1)
-shading_mode = 0
+[sub_resource type="QuadMesh" id="QuadMesh_hpbar"]
+size = Vector2(0.8, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hpfg"]
 albedo_color = Color(0.85, 0.18, 0.18, 1)
 shading_mode = 0
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="SphereMesh" id="SphereMesh_eye"]
+radius = 0.07
+height = 0.14
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eye"]
+albedo_color = Color(1, 0.95, 0.7, 1)
+emission_enabled = true
+emission = Color(1, 0.95, 0.7, 1)
+emission_energy_multiplier = 1.5
+roughness = 0.3
+
+[sub_resource type="PrismMesh" id="PrismMesh_snout"]
+size = Vector3(0.18, 0.1, 0.18)
 
 [node name="Enemy" type="CharacterBody3D" groups=["enemy"]]
 script = ExtResource("1_enemy_script")
+kind = ExtResource("3_grunt_kind")
+health_orb_scene = ExtResource("4_health_orb")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_enemy")
 material_override = SubResource("StandardMaterial3D_enemy")
 
+[node name="EyeL" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.55, -0.45)
+mesh = SubResource("SphereMesh_eye")
+material_override = SubResource("StandardMaterial3D_eye")
+
+[node name="EyeR" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.55, -0.45)
+mesh = SubResource("SphereMesh_eye")
+material_override = SubResource("StandardMaterial3D_eye")
+
+[node name="Snout" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0.5, -0.5)
+mesh = SubResource("PrismMesh_snout")
+material_override = SubResource("StandardMaterial3D_enemy")
+
 [node name="Collision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 1.8
+path_max_distance = 5.0
+avoidance_enabled = true
+radius = 0.6
+height = 2.0
+neighbor_distance = 6.0
+max_neighbors = 8
+max_speed = 6.0
 
 [node name="Hurtbox" type="Area3D" parent="."]
 script = ExtResource("2_hurtbox_script")
@@ -48,14 +90,6 @@ shape = SubResource("CapsuleShape3D_hurtbox")
 [node name="HpBar" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 
-[node name="Bg" type="MeshInstance3D" parent="HpBar"]
-mesh = SubResource("BoxMesh_hpbar")
-material_override = SubResource("StandardMaterial3D_hpbg")
-
-[node name="FgPivot" type="Node3D" parent="HpBar"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0, -0.03)
-
-[node name="Fg" type="MeshInstance3D" parent="HpBar/FgPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0, 0)
-mesh = SubResource("BoxMesh_hpbar")
+[node name="Fg" type="MeshInstance3D" parent="HpBar"]
+mesh = SubResource("QuadMesh_hpbar")
 material_override = SubResource("StandardMaterial3D_hpfg")

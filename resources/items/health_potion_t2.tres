@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Potion" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/Potion.gd" id="1_potion_script"]
+
+[resource]
+script = ExtResource("1_potion_script")
+display_name = "Healing Draught"
+tier = 2
+restore_hp = 200
+restore_stamina = 0.0
+restore_mana = 0.0
+remove_corruption = 0.0
+icon_color = Color(0.95, 0.35, 0.2, 1)
